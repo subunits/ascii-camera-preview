@@ -1,4 +1,4 @@
-
+~~~
 ASCII Camera Preview
 
 ascii_camera_preview.h is a C header file for visualizing camera paths in 3D as an ASCII grid in the terminal.
@@ -50,3 +50,4 @@ Notes:
 - Works with multiple overlapping paths
 - Grid size is adjustable via ASCII_WIDTH / ASCII_HEIGHT
 - Colors require terminal that supports ANSI escape codes
+~~~
