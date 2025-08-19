@@ -21,13 +21,13 @@ Usage:
 
 2. Prepare an array of paths:
 
-ascii_path_info paths[5];
-for(int i=0; i<5; i++){
-    paths[i].path = some_camera_path[i]; // pointer to camera_path_smooth
-    paths[i].symbol = 0;    // auto-assign symbol
-    paths[i].blended = (i % 2); // alternating blended / motion-aligned
-    paths[i].beta = 0.5;    // used for blended paths
-}
+    ascii_path_info paths[5];
+    for(int i=0; i<5; i++){
+        paths[i].path = some_camera_path[i]; // pointer to camera_path_smooth
+        paths[i].symbol = 0;    // auto-assign symbol
+        paths[i].blended = (i % 2); // alternating blended / motion-aligned
+        paths[i].beta = 0.5;    // used for blended paths
+    }
 
 3. Assign symbols:
 
