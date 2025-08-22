@@ -1,55 +1,46 @@
+#include "ascii_camera_preview.h"
 #include <stdio.h>
-#include <math.h>
-#include "camera_path.h"
+#include <stdlib.h>
 
-#define GRID_SIZE 21
-#define GRID_CENTER (GRID_SIZE / 2)
-#define STEPS 10  // interpolation steps between keyframes
+static size_t g_width_chars = 0;
+static size_t g_height_chars = 0;
 
-void plot_frame(Vec3 pos, Vec3 forward, int frame) {
-    char grid[GRID_SIZE][GRID_SIZE];
+static const char *ASCII_GRADIENT = " .:-=+*#%@";
+static const size_t GRADIENT_LEN = 10;
 
-    for (int y = 0; y < GRID_SIZE; y++) {
-        for (int x = 0; x < GRID_SIZE; x++) {
-            grid[y][x] = '.';
-        }
-    }
+int ascii_camera_init(size_t width_chars, size_t height_chars) {
+    if (width_chars == 0 || height_chars == 0) return -1;
+    g_width_chars = width_chars;
+    g_height_chars = height_chars;
+    return 0;
+}
 
-    int gx = (int)roundf(GRID_CENTER + pos.x);
-    int gy = (int)roundf(GRID_CENTER - pos.z);
-    if (gx >= 0 && gx < GRID_SIZE && gy >= 0 && gy < GRID_SIZE) {
-        grid[gy][gx] = 'C';
-    }
+void ascii_camera_clear(void) {
+    printf("\033[2J\033[H"); // ANSI escape: clear screen, move cursor home
+}
 
-    // Draw forward direction (scaled)
-    int fx = gx + (int)roundf(forward.x * 2);
-    int fy = gy - (int)roundf(forward.z * 2);
-    if (fx >= 0 && fx < GRID_SIZE && fy >= 0 && fy < GRID_SIZE) {
-        grid[fy][fx] = '>';
-    }
+void ascii_camera_render(const uint8_t *frame,
+                         size_t width_px,
+                         size_t height_px,
+                         size_t stride_bytes) {
+    if (!frame || g_width_chars == 0 || g_height_chars == 0) return;
 
-    printf("Frame %d: Camera at (%.2f, %.2f, %.2f)\n", frame, pos.x, pos.y, pos.z);
-    for (int y = 0; y < GRID_SIZE; y++) {
-        for (int x = 0; x < GRID_SIZE; x++) {
-            putchar(grid[y][x]);
+    size_t step_x = width_px / g_width_chars;
+    size_t step_y = height_px / g_height_chars;
+    if (step_x == 0) step_x = 1;
+    if (step_y == 0) step_y = 1;
+
+    for (size_t y = 0; y < height_px; y += step_y) {
+        for (size_t x = 0; x < width_px; x += step_x) {
+            uint8_t pixel = frame[y * stride_bytes + x];
+            size_t idx = (pixel * (GRADIENT_LEN - 1)) / 255;
+            putchar(ASCII_GRADIENT[idx]);
         }
         putchar('\n');
     }
-    printf("\n");
 }
 
-int main() {
-    int frame = 0;
-    for (int i = 0; i < camera_path_length - 1; i++) {
-        CameraKeyframe a = camera_path[i];
-        CameraKeyframe b = camera_path[i+1];
-        for (int step = 0; step < STEPS; step++) {
-            float t = (float)step / (STEPS-1);
-            Vec3 pos = vec3_lerp(a.position, b.position, t);
-            Quat rot = quat_slerp(a.rotation, b.rotation, t);
-            Vec3 forward = quat_forward(rot);
-            plot_frame(pos, forward, frame++);
-        }
-    }
-    return 0;
+void ascii_camera_shutdown(void) {
+    g_width_chars = 0;
+    g_height_chars = 0;
 }
